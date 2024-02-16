@@ -35,7 +35,7 @@ const customerSchema = new mongoose.Schema({
             }
         ]
     },
-    passowrd: {
+    password: {
         type: String,
         required: true
     },
@@ -46,6 +46,15 @@ const customerSchema = new mongoose.Schema({
         type: String
     }
 }, { timestamps: true })
+
+customerSchema.pre("save", async function (next) {
+    if (this.isModified("password")) {
+        this.passoword = await bcrypt.hash(this.passowrd, 10)
+        next();
+    } else {
+        return next();
+    }
+})
 
 customerSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.passowrd)

@@ -18,7 +18,7 @@ const bankerSchema = new mongoose.Schema({
     role: {
         type: String,
     },
-    passowrd: {
+    password: {
         type: String,
         required: true
     },
@@ -26,6 +26,15 @@ const bankerSchema = new mongoose.Schema({
         type: String
     }
 }, { timestamps: true })
+
+bankerSchema.pre("save", async function (next) {
+    if (this.isModified("password")) {
+        this.passoword = await bcrypt.hash(this.passowrd, 10)
+        next();
+    } else {
+        return next();
+    }
+})
 
 bankerSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.passowrd)
