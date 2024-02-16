@@ -18,4 +18,8 @@ app.get("/", (req, res) => {
     res.send("<h1>Server Running/Live</h1>")
 })
 
+import customerRouter from "./routes/customer.routes.js"
+
+app.use('/api/v1/customer', customerRouter)
+
 export { app }
