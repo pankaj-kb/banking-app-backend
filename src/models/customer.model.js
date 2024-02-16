@@ -49,7 +49,7 @@ const customerSchema = new mongoose.Schema({
 
 customerSchema.pre("save", async function (next) {
     if (this.isModified("password")) {
-        this.passoword = await bcrypt.hash(this.passowrd, 10)
+        this.password = await bcrypt.hash(this.password, 10)
         next();
     } else {
         return next();
@@ -57,7 +57,7 @@ customerSchema.pre("save", async function (next) {
 })
 
 customerSchema.methods.isPasswordCorrect = async function (password) {
-    return await bcrypt.compare(password, this.passowrd)
+    return await bcrypt.compare(password, this.password)
 }
 
 customerSchema.methods.generateAccessToken = function () {
@@ -71,7 +71,7 @@ customerSchema.methods.generateAccessToken = function () {
     })
 }
 
-userSchema.methods.generateRefreshToken = function () {
+customerSchema.methods.generateRefreshToken = function () {
     return jwt.sign({
         _id: this._id,
     }, process.env.REFRESH_TOKEN_SECRET, {
