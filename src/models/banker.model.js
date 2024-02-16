@@ -27,4 +27,4 @@ const bankerSchema = new mongoose.Schema({
     }
 }, { timestamps: true })
 
-export const Banker = new mongoose.model("Banker", bankerSchema)
+export const Banker = mongoose.model("Banker", bankerSchema)
