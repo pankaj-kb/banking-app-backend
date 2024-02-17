@@ -2,6 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js"
 import { APIResponse } from "../utils/APIResponse.js"
 import { APIError } from "../utils/APIError.js"
 import { Customer } from "../models/customer.model.js"
+import { Transaction } from "../models/transaction.model.js"
 
 
 const options = {
@@ -54,10 +55,11 @@ const registerCustomer = asyncHandler(async (req, res) => {
         email,
         username: username.toLowerCase(),
         password,
-        pin
+        pin,
+        balance: 0
     })
 
-    const createdCustomer = await Customer.findById(customer._id).select("-password -refreshToken")
+    const createdCustomer = await Customer.findById(customer._id).select("-password -pin -refreshToken")
 
     if (!createdCustomer) {
         throw new APIError(500, "Something went wrong while registering the user.")
@@ -75,10 +77,10 @@ const loginCustomer = asyncHandler(async (req, res) => {
     }
 
     const customer = await Customer.findOne({
-        $: [{ username }, { email }]
+        $or: [{ username }, { email }]
     })
 
-    if (!user) {
+    if (!customer) {
         throw new APIError(401, "User does not exist")
     }
 
@@ -123,8 +125,58 @@ const logoutCustomer = asyncHandler(async (req, res) => {
 
 })
 
+const getTransactions = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { sortOrder } = req.query;
+
+    const user = await Customer.findOne({ _id: userId });
+
+    if (!user) {
+        throw new APIError(404, "User not found/Exist");
+    }
+
+    const sortCriteria = {};
+    sortCriteria.createdAt = sortOrder === 'asc' ? 1 : -1;
+
+    const transactions = await Customer.aggregate([
+        {
+            $match: { _id: user._id }
+        },
+        {
+            $lookup: {
+                from: "transactions",
+                localField: "transactions",
+                foreignField: "_id",
+                as: "transactionDetails"
+            }
+        },
+        {
+            $unwind: "$transactionDetails"
+        },
+        {
+            $project: {
+                _id: "$transactionDetails._id",
+                transactionType: "$transactionDetails.transactionType",
+                amount: "$transactionDetails.amount",
+                from: "$transactionDetails.from",
+                to: "$transactionDetails.to",
+                status: "$transactionDetails.status",
+                createdAt: "$transactionDetails.createdAt"
+            }
+        },
+        {
+            $sort: sortCriteria
+        }
+    ]);
+
+    return res
+        .status(200)
+        .json(new APIResponse(200, transactions, "All transactions Fetched Successfully."));
+});
+
 export {
     registerCustomer,
     loginCustomer,
-    logoutCustomer
+    logoutCustomer,
+    getTransactions
 }
