@@ -21,6 +21,10 @@ const transactionSchema = new mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: "Customer",
         required: true,
+    },
+    status: {
+        type: String,
+        required: true,
     }
 }, { timestamps: true })
 
