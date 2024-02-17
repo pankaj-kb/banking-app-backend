@@ -49,6 +49,15 @@ bankerSchema.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password)
 }
 
+bankerSchema.pre("save", async function (next) {
+    if (this.isModified("password")) {
+        this.password = await bcrypt.hash(this.password, 10)
+        next();
+    } else {
+        return next();
+    }
+})
+
 bankerSchema.methods.generateAccessToken = function () {
     return jwt.sign({
         _id: this._id,
