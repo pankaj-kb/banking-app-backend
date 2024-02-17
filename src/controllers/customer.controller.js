@@ -126,6 +126,7 @@ const logoutCustomer = asyncHandler(async (req, res) => {
 })
 
 const getTransactions = asyncHandler(async (req, res) => {
+
     const { userId } = req.params;
     const { sortOrder } = req.query;
 
@@ -136,6 +137,7 @@ const getTransactions = asyncHandler(async (req, res) => {
     }
 
     const sortCriteria = {};
+
     sortCriteria.createdAt = sortOrder === 'asc' ? 1 : -1;
 
     const transactions = await Customer.aggregate([
@@ -154,12 +156,34 @@ const getTransactions = asyncHandler(async (req, res) => {
             $unwind: "$transactionDetails"
         },
         {
+            $lookup: {
+                from: "customers",
+                localField: "transactionDetails.from",
+                foreignField: "_id",
+                as: "fromUser"
+            }
+        },
+        {
+            $unwind: "$fromUser"
+        },
+        {
+            $lookup: {
+                from: "customers",
+                localField: "transactionDetails.to",
+                foreignField: "_id",
+                as: "toUser"
+            }
+        },
+        {
+            $unwind: "$toUser"
+        },
+        {
             $project: {
                 _id: "$transactionDetails._id",
                 transactionType: "$transactionDetails.transactionType",
                 amount: "$transactionDetails.amount",
-                from: "$transactionDetails.from",
-                to: "$transactionDetails.to",
+                from: "$fromUser.fullName",
+                to: "$toUser.fullName",
                 status: "$transactionDetails.status",
                 createdAt: "$transactionDetails.createdAt"
             }
@@ -173,6 +197,7 @@ const getTransactions = asyncHandler(async (req, res) => {
         .status(200)
         .json(new APIResponse(200, transactions, "All transactions Fetched Successfully."));
 });
+
 
 export {
     registerCustomer,

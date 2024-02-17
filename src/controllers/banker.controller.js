@@ -55,6 +55,7 @@ const registerBanker = asyncHandler(async (req, res) => {
         email,
         username: username.toLowerCase(),
         password,
+        role: "banker",
     })
 
     const createdBanker = await Banker.findById(banker._id).select("-password -refreshToken")
@@ -69,6 +70,8 @@ const registerBanker = asyncHandler(async (req, res) => {
 
 const loginBanker = asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
+
+    console.log(req.body)
 
     if (!(username || email)) {
         throw new APIError(400, "Username or Email is required.")
@@ -85,8 +88,12 @@ const loginBanker = asyncHandler(async (req, res) => {
     const isPasswordValid = await banker.isPasswordCorrect(password)
 
     if (!isPasswordValid) {
-        throw new APIError(404, "Password is not valid")
+        throw new APIError(404, "Password is not valid");
     }
+
+    console.log('Banker Object:', banker);
+    console.log('Provided Password:', password);
+    console.log('Stored Password:', banker.password);
 
     const { accessToken, refreshToken } = await generateAccessTokenAndRefreshTokens(banker._id)
 
@@ -102,6 +109,11 @@ const loginBanker = asyncHandler(async (req, res) => {
 })
 
 const logoutBanker = asyncHandler(async (req, res) => {
+
+    if (req.user.role !== "banker") {
+        throw new APIError(401, "Only authorized for bankers.")
+    }
+
     await Banker.findByIdAndUpdate(
         req.user._id, {
         $unset: {
@@ -122,8 +134,47 @@ const logoutBanker = asyncHandler(async (req, res) => {
         )
 })
 
+const getAllCustomers = asyncHandler(async (req, res) => {
+
+    if (req.user.role !== "banker") {
+        throw new APIError(401, "Only authorized for bankers.")
+    }
+
+    const customers = await Customer.find({}, { password: 0, refreshToken: 0, pin: 0 });
+
+    if (!customers) {
+        throw new APIError(404, "No customers found");
+    }
+
+    return res
+        .status(200)
+        .json(new APIResponse(200, customers, "All customers fetched successfully."));
+})
+
+const getCustomerInfo = asyncHandler(async (req, res) => {
+    const { customerId } = req.params;
+
+    if (!customerId) {
+        throw new APIError(401, "kindly provide CustomerId")
+    }
+
+    const customer = await Customer.findOne({ _id: customerId }).select("-password -pin -refreshToken -refreshToken")
+
+    if (!customer) {
+        throw new APIError(404, "Customer not found/Exist.");
+    }
+
+    return res
+        .status(200)
+        .json(new APIResponse(200, customer, "User Fetched Successfully."))
+
+})
+
+
 export {
     registerBanker,
     loginBanker,
-    logoutBanker
+    logoutBanker,
+    getAllCustomers,
+    getCustomerInfo,
 }

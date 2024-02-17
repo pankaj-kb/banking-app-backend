@@ -297,5 +297,60 @@ const withdrawAmount = asyncHandler(async (req, res) => {
         .json(new APIResponse(201, transaction, "Transaction completed and user balances updated successfully."))
 })
 
+const getTransactionInfo = asyncHandler(async (req, res) => {
 
-export { sendAmount, depositAmount, withdrawAmount}
+    const { transactionId } = req.params;
+
+    const transaction = await Transaction.findOne({ _id: transactionId })
+
+    if (!transaction) {
+        throw new APIError(404, "Transaction Not found/Exist.")
+    }
+
+    const transactionDetails = await Transaction.aggregate([
+        {
+            $match: { _id: transaction._id }
+        },
+        {
+            $lookup: {
+                from: "customers",
+                localField: "from",
+                foreignField: "_id",
+                as: "fromUser"
+            }
+        },
+        {
+            $unwind: "$fromUser"
+        },
+        {
+            $lookup: {
+                from: "customers",
+                localField: "to",
+                foreignField: "_id",
+                as: "toUser"
+            }
+        },
+        {
+            $unwind: "$toUser"
+        },
+        {
+            $project: {
+                _id: transaction._id,
+                from: "$fromUser.fullName",
+                to: "$toUser.fullName",
+                status: transaction.status,
+                transactionType: transaction.transactionType,
+                amount: transaction.amount,
+                createdAt: transaction.createdAt,
+            }
+        }
+    ])
+
+    return res
+        .status(200)
+        .json(new APIResponse(200, transactionDetails, "Transaction Fetched Successfully."))
+
+})
+
+
+export { sendAmount, depositAmount, withdrawAmount, getTransactionInfo }
