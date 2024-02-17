@@ -19,7 +19,11 @@ app.get("/", (req, res) => {
 })
 
 import customerRouter from "./routes/customer.routes.js"
+import BankerRouter from "./routes/banker.routes.js"
+import TransactionRouter from "./routes/transaction.routes.js"
 
 app.use('/api/v1/customer', customerRouter)
+app.use('/api/v1/banker', BankerRouter)
+app.use("/api/v1/transaction", TransactionRouter)
 
 export { app }
