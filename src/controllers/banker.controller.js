@@ -152,13 +152,13 @@ const getAllCustomers = asyncHandler(async (req, res) => {
 })
 
 const getCustomerInfo = asyncHandler(async (req, res) => {
-    const { customerId } = req.params;
+    const { customerusername } = req.params;
 
-    if (!customerId) {
+    if (!customerusername) {
         throw new APIError(401, "kindly provide CustomerId")
     }
 
-    const customer = await Customer.findOne({ _id: customerId }).select("-password -pin -refreshToken -refreshToken")
+    const customer = await Customer.findOne({ username: customerusername}).select("-password -pin -refreshToken -refreshToken")
 
     if (!customer) {
         throw new APIError(404, "Customer not found/Exist.");
