@@ -198,10 +198,24 @@ const getTransactions = asyncHandler(async (req, res) => {
         .json(new APIResponse(200, transactions, "All transactions Fetched Successfully."));
 });
 
+const getCurrentUser = asyncHandler(async (req, res) => {
+        
+    if (!req.user) {
+        throw new APIError(400, "No user found")
+    }
+
+    const user = req.user
+
+    return res
+        .status(200)
+        .json(new APIResponse(200, user, "User fetched successfully"))
+})
+
 
 export {
     registerCustomer,
     loginCustomer,
     logoutCustomer,
-    getTransactions
+    getTransactions,
+    getCurrentUser,
 }
