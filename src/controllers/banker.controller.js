@@ -101,8 +101,8 @@ const loginBanker = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        // .cookie("accessToken", accessToken, options)
+        // .cookie("refreshToken", refreshToken, options)
         .json(new APIResponse(200,
             { user: loggedInBanker, accessToken, refreshToken }
         ))
@@ -127,8 +127,8 @@ const logoutBanker = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .clearCookie("accessToken", options)
-        .clearCookie("refreshToken", options)
+        // .clearCookie("accessToken", options)
+        // .clearCookie("refreshToken", options)
         .json(
             new APIResponse(200, {}, "User is logged out successfully.")
         )
