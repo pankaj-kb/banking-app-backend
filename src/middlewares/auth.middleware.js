@@ -6,14 +6,15 @@ import jwt from "jsonwebtoken"
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
     try {
-        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+        const token = await req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
         console.log("token at 10: ",token)
 
         if (!token) {
             throw new APIError(401, "Unauthorized request");
         }
 
-        const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        console.log(decodedToken)
 
         const findUserById = async (userId) => {
             return await Customer.findById(userId).select("-password -refreshToken") || await Banker.findById(userId).select("-password -refreshToken");
